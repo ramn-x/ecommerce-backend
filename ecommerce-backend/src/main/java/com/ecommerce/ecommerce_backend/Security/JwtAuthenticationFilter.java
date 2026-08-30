@@ -13,7 +13,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -58,9 +57,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (user != null) {
                     CustomUserDetails userDetails= new CustomUserDetails(user);
+                    System.out.println("EMAIL: "+userDetails.getUsername());
+                    System.out.println("ROLE: "+userDetails.getAuthorities());
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    user,
+                                    userDetails,
                                     null,
                                     userDetails.getAuthorities());
 
