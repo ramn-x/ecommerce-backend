@@ -2,13 +2,13 @@ package com.ecommerce.ecommerce_backend.Service;
 
 import com.ecommerce.ecommerce_backend.DTO.OrderDTO;
 import com.ecommerce.ecommerce_backend.DTO.OrderRequestDTO;
+import com.ecommerce.ecommerce_backend.Entity.Cart;
 import com.ecommerce.ecommerce_backend.Entity.Order;
 import com.ecommerce.ecommerce_backend.Entity.Product;
-import com.ecommerce.ecommerce_backend.Exception.InsufficientStockException;
-import com.ecommerce.ecommerce_backend.Exception.OrderNotFoundException;
-import com.ecommerce.ecommerce_backend.Exception.ProductNotFoundException;
-import com.ecommerce.ecommerce_backend.Exception.UserNotFoundException;
+import com.ecommerce.ecommerce_backend.Entity.User;
+import com.ecommerce.ecommerce_backend.Exception.*;
 import com.ecommerce.ecommerce_backend.Mapper.OrderMapper;
+import com.ecommerce.ecommerce_backend.Repository.CartRepository;
 import com.ecommerce.ecommerce_backend.Repository.OrderRepository;
 import com.ecommerce.ecommerce_backend.Repository.ProductRepository;
 import com.ecommerce.ecommerce_backend.Repository.UserRepository;
@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -26,58 +28,69 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CartRepository cartRepository;
 
     public OrderService(
             OrderRepository orderRepository,
             ProductRepository productRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, CartRepository cartRepository) {
 
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
     }
 
     // Create Order
     @Transactional
-    public OrderDTO addOrder(OrderRequestDTO orderDTO) {
+    public OrderDTO addOrder(
+            OrderRequestDTO orderDTO,
+            String currentUserEmail) {
 
-        // Check User
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Current user not found with email: "
+                                        + currentUserEmail));
+
+        if (!currentUser.getId().equals(orderDTO.getUserId())
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
+
         userRepository.findById(orderDTO.getUserId())
                 .orElseThrow(() ->
                         new UserNotFoundException(
                                 "User not found with id: "
                                         + orderDTO.getUserId()));
 
-        // Check Product
-        Product product = productRepository.findById(orderDTO.getProductId())
-                .orElseThrow(() ->
-                        new ProductNotFoundException(
-                                "Product not found with id: "
-                                        + orderDTO.getProductId()));
+        Product product =
+                productRepository.findById(orderDTO.getProductId())
+                        .orElseThrow(() ->
+                                new ProductNotFoundException(
+                                        "Product not found with id: "
+                                                + orderDTO.getProductId()));
 
-        if (product.getQuantity()<orderDTO.getQuantity()){
-            throw new InsufficientStockException("not enough stock");
+        if (product.getQuantity() < orderDTO.getQuantity()) {
+            throw new InsufficientStockException("Not enough stock");
         }
 
-
-        // Calculate price
         double totalPrice =
                 product.getPrice() * orderDTO.getQuantity();
+
         product.setQuantity(
-                product.getQuantity()-orderDTO.getQuantity());
+                product.getQuantity() - orderDTO.getQuantity());
+
         productRepository.save(product);
 
-        // Convert DTO → Entity
         Order order = OrderMapper.toEntity(orderDTO);
 
         order.setOrderDate(LocalDateTime.now());
-
         order.setTotalPrice(totalPrice);
 
-        // Save
         Order savedOrder = orderRepository.save(order);
 
-        // Convert Entity → DTO
         return OrderMapper.toDTO(savedOrder);
     }
 
@@ -90,9 +103,23 @@ public class OrderService {
     // Get Order By ID
     public Page<OrderDTO> getOrdersByUserId(
             Integer userId,
+            String currentUserEmail,
             Pageable pageable) {
 
-        Page<Order> orders = orderRepository.findByUserId(userId,pageable );
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Current user not found with email: "
+                                        + currentUserEmail));
+
+        if (!currentUser.getId().equals(userId)
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
+
+        Page<Order> orders =
+                orderRepository.findByUserId(userId, pageable);
 
         return orders.map(OrderMapper::toDTO);
     }

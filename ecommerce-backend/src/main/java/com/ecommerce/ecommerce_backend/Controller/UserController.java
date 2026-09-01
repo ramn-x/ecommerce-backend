@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -39,20 +41,35 @@ public class UserController {
 
     @GetMapping("/{id}")
     public UserDTO getById(@PathVariable Integer id){
-        return userService.getUserById(id);
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+                String currentUserEmail = authentication.getName();
+
+        return userService.getUserById(id , currentUserEmail);
     }
 
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void >deleteUser(@PathVariable Integer id){
-        userService.deleteById(id);
+
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
+
+        String currentUserEmail =
+                authentication.getName();
+
+        userService.deleteById(id,currentUserEmail  );
         return ResponseEntity.noContent().build();
     }
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable Integer id,
             @Valid @RequestBody UserRequestDTO request){
-        UserDTO updatedUser = userService.updateUser(id, request);
+        Authentication authentication =SecurityContextHolder
+                .getContext().getAuthentication();
+        String currentUserEmail =authentication.getName();
+        UserDTO updatedUser = userService.updateUser(id, request, currentUserEmail);
         return ResponseEntity.ok(updatedUser);
     }
     @GetMapping("/search")
@@ -73,9 +90,5 @@ public class UserController {
     public LoginResponseDTO login(@Valid
                       @RequestBody LoginRequestDTO request){
         return userService.login(request);
-    }
-    @GetMapping("/admin")
-    public String adminOnly(){
-        return "welcome admin";
     }
 }

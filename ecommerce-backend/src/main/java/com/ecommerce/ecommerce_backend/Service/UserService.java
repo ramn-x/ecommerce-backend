@@ -5,6 +5,7 @@ import com.ecommerce.ecommerce_backend.DTO.LoginResponseDTO;
 import com.ecommerce.ecommerce_backend.DTO.UserDTO;
 import com.ecommerce.ecommerce_backend.DTO.UserRequestDTO;
 import com.ecommerce.ecommerce_backend.Entity.User;
+import com.ecommerce.ecommerce_backend.Exception.AccessDeniedException;
 import com.ecommerce.ecommerce_backend.Exception.EmailAlreadyExistsException;
 import com.ecommerce.ecommerce_backend.Exception.UserNotFoundException;
 import com.ecommerce.ecommerce_backend.Mapper.UserMapper;
@@ -52,30 +53,75 @@ public class UserService {
     }
 
     // Get User By ID
-    public UserDTO getUserById(Integer id) {
+    public UserDTO getUserById(Integer id, String currentUserEmail) {
+
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
-                        new UserNotFoundException("user not found with this id" + id));
+                        new UserNotFoundException(
+                                "User not found with id: " + id));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Current user not found with email: "
+                                        + currentUserEmail));
+
+        if (!user.getEmail().equals(currentUserEmail)
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
+
         return UserMapper.toDTO(user);
     }
 
     // Delete User
-    public void deleteById(Integer id) {
-        User user = userRepository
-                .findById(id)
+    public void deleteById(
+            Integer id,
+            String currentUserEmail) {
+
+        User user = userRepository.findById(id)
                 .orElseThrow(() ->
                         new UserNotFoundException(
                                 "User not found with id: " + id));
-        userRepository.deleteById(id);
-    }
 
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Current user not found with email: "
+                                        + currentUserEmail));
+
+        if (!user.getEmail().equals(currentUserEmail)
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
+
+        userRepository.delete(user);
+
+     }
     // Update User
-    public UserDTO updateUser(Integer id, UserRequestDTO request) {
+    public UserDTO updateUser(
+            Integer id,
+            UserRequestDTO request,
+            String currentUserEmail) {
 
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() ->
                         new UserNotFoundException(
-                                "user not found with id " + id));
+                                "User not found with id: " + id));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Current user not found with email: "
+                                        + currentUserEmail));
+
+        if (!existingUser.getEmail().equals(currentUserEmail)
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
 
         if (userRepository.existsByEmailAndIdNot(
                 request.getEmail(), id)) {

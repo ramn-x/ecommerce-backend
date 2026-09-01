@@ -57,8 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (user != null) {
                     CustomUserDetails userDetails= new CustomUserDetails(user);
-                    System.out.println("EMAIL: "+userDetails.getUsername());
-                    System.out.println("ROLE: "+userDetails.getAuthorities());
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -70,11 +68,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
             } catch (JwtException | IllegalArgumentException ex) {
-                // Invalid JWT: don't crash the request
                 SecurityContextHolder.clearContext();
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid or expired token");
+                return;
             }
         }
-
         filterChain.doFilter(request, response);
     }
 }
