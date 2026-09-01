@@ -18,13 +18,17 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    // BCrypt password encoder
+    // =========================
+    // BCrypt Password Encoder
+    // =========================
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Load users from MySQL database
+    // =========================
+    // Load User From MySQL
+    // =========================
     @Bean
     public UserDetailsService userDetailsService(
             UserRepository userRepository) {
@@ -37,7 +41,9 @@ public class SecurityConfig {
                                         + username));
     }
 
-    // Security configuration
+    // =========================
+    // Security Configuration
+    // =========================
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -51,110 +57,158 @@ public class SecurityConfig {
                 );
 
         http
+                // REST API
                 .csrf(csrf -> csrf.disable())
 
+                // JWT based authentication
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/users/login"
-                                ).permitAll()
 
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/users"
-                                ).permitAll()
+                        // =========================
+                        // PUBLIC
+                        // =========================
 
-                                // USER MANAGEMENT
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/users"
-                                ).hasRole("ADMIN")
+                        // Login
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/users/login"
+                        ).permitAll()
 
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/users/search"
-                                ).hasRole("ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/users/email"
-                                ).hasRole("ADMIN")
-
-                                .requestMatchers(
-                                        "/users/admin"
-                                ).hasRole("ADMIN")
-                                // PRODUCTS
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/products/**"
-                                ).hasAnyRole("USER", "ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/products"
-                                ).hasRole("ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.PUT,
-                                        "/products/**"
-                                ).hasRole("ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.DELETE,
-                                        "/products/**"
-                                ).hasRole("ADMIN")
-
-                                // ORDERS
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/orders"
-                                ).hasAnyRole("USER", "ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/orders/**"
-                                ).hasAnyRole("USER", "ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.PUT,
-                                        "/orders/**"
-                                ).hasRole("ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.DELETE,
-                                        "/orders/**"
-                                ).hasRole("ADMIN")
-                                // CART
-                                .requestMatchers(
-                                        HttpMethod.POST,
-                                        "/cart"
-                                ).hasAnyRole("USER", "ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.GET,
-                                        "/cart"
-                                ).hasAnyRole("USER", "ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.PUT,
-                                        "/cart/**"
-                                ).hasAnyRole("USER", "ADMIN")
-
-                                .requestMatchers(
-                                        HttpMethod.DELETE,
-                                        "/cart/**"
-                                ).hasAnyRole("USER", "ADMIN")
+                        // Registration
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/users"
+                        ).permitAll()
 
 
-                                // EVERYTHING ELSE
-                                .anyRequest().authenticated()
+                        // =========================
+                        // USER MANAGEMENT
+                        // =========================
 
-                        )
+                        // Admin only
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/users"
+                        ).hasRole("ADMIN")
 
-                // JWT filter runs before Spring's authentication filter
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/users/search"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/users/email"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                "/users/admin"
+                        ).hasRole("ADMIN")
+
+
+                        // =========================
+                        // PRODUCTS
+                        // =========================
+
+                        // USER + ADMIN can view products
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/products/**"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // ADMIN can manage products
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/products"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/products/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/products/**"
+                        ).hasRole("ADMIN")
+
+
+                        // =========================
+                        // ORDERS
+                        // =========================
+
+                        // USER + ADMIN can create orders
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/orders"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // ADMIN only: orders for a specific product
+                        // IMPORTANT: must come before /orders/**
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/orders/product/**"
+                        ).hasRole("ADMIN")
+
+                        // USER + ADMIN can read orders
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/orders/**"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // ADMIN only
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/orders/**"
+                        ).hasRole("ADMIN")
+
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/orders/**"
+                        ).hasRole("ADMIN")
+
+
+                        // =========================
+                        // CART
+                        // =========================
+
+                        // USER + ADMIN can add to cart
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/cart"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // USER + ADMIN can view cart
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/cart"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // USER + ADMIN can update cart
+                        // Ownership is checked in CartService
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/cart/**"
+                        ).hasAnyRole("USER", "ADMIN")
+
+                        // USER + ADMIN can delete cart
+                        // Ownership is checked in CartService
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/cart/**"
+                        ).hasAnyRole("USER", "ADMIN")
+
+
+                        // =========================
+                        // EVERYTHING ELSE
+                        // =========================
+
+                        .anyRequest().authenticated()
+                )
+
+                // JWT filter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class

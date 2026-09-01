@@ -53,7 +53,17 @@ public class OrderController {
     }
     @GetMapping
     public Page<OrderDTO> getAllOrder(Pageable pageable) {
-        return orderService.getAllUser(pageable);
+
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
+
+        String currentUserEmail =
+                authentication.getName();
+        return orderService.getAllOrders(
+                currentUserEmail,
+                pageable
+        );
     }
 
     @GetMapping("/user/{userId}")
@@ -89,8 +99,15 @@ public class OrderController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrder(
             @PathVariable Integer id) {
+        Authentication authentication =
+                SecurityContextHolder
+                        .getContext().getAuthentication();
 
-        orderService.deleteOrder(id);
+        String currentUserEmail =
+                authentication.getName();
+
+        orderService.deleteOrder(id,
+                currentUserEmail);
 
         return ResponseEntity
                 .noContent()
@@ -105,21 +122,21 @@ public class OrderController {
         return orderService.updateOrder(id, orderDTO);
     }
 
-//    @PostMapping("/checkout")
-//    public ResponseEntity<List<OrderDTO>> checkout() {
-//
-//        Authentication authentication =
-//                SecurityContextHolder.getContext()
-//                        .getAuthentication();
-//
-//        String currentUserEmail =
-//                authentication.getName();
-//
-//        List<OrderDTO> orders =
-//                orderService.checkout(currentUserEmail);
-//
-//        return ResponseEntity
-//                .status(HttpStatus.CREATED)
-//                .body(orders);
-//    }
+    @PostMapping("/checkout")
+    public ResponseEntity<List<OrderDTO>> checkout() {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
+
+        String currentUserEmail =
+                authentication.getName();
+
+        List<OrderDTO> orders =
+                orderService.checkout(currentUserEmail);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(orders);
+    }
 }

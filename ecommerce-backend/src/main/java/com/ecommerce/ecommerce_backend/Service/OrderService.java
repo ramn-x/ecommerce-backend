@@ -94,10 +94,100 @@ public class OrderService {
         return OrderMapper.toDTO(savedOrder);
     }
 
-    // Get All Orders
-    public Page<OrderDTO> getAllUser(Pageable pageable) {
+    // Checkout Cart
+    @Transactional
+    public List<OrderDTO> checkout(String currentUserEmail) {
 
-        Page<Order> orders = orderRepository.findAll(pageable);
+        User user = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: "
+                                        + currentUserEmail));
+
+        List<Cart> cartItems =
+                cartRepository.findByUserId(user.getId());
+
+        if (cartItems.isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
+
+        List<OrderDTO> orderDTOList = new ArrayList<>();
+
+        for (Cart cartItem : cartItems) {
+
+            Product product = cartItem.getProduct();
+
+            Integer quantity = cartItem.getQuantity();
+
+            // Check stock
+            if (product.getQuantity() < quantity) {
+                throw new InsufficientStockException(
+                        "Not enough stock for product: "
+                                + product.getName());
+            }
+
+            // Calculate total price
+            double totalPrice =
+                    product.getPrice() * quantity;
+
+            // Reduce product stock
+            product.setQuantity(
+                    product.getQuantity() - quantity
+            );
+
+            productRepository.save(product);
+
+            // Create OrderRequestDTO
+            OrderRequestDTO orderRequestDTO =
+                    new OrderRequestDTO();
+
+            orderRequestDTO.setUserId(user.getId());
+            orderRequestDTO.setProductId(product.getId());
+            orderRequestDTO.setQuantity(quantity);
+
+            // Convert DTO → Entity
+            Order order =
+                    OrderMapper.toEntity(orderRequestDTO);
+
+            order.setOrderDate(LocalDateTime.now());
+            order.setTotalPrice(totalPrice);
+
+            // Save order
+            Order savedOrder =
+                    orderRepository.save(order);
+
+            // Convert Entity → DTO
+            orderDTOList.add(
+                    OrderMapper.toDTO(savedOrder)
+            );
+        }
+
+        // Clear cart after successful checkout
+        cartRepository.deleteAll(cartItems);
+
+        return orderDTOList;
+    }
+
+    // Get All Orders
+    public Page<OrderDTO> getAllOrders(
+            String currentUserEmail,
+            Pageable pageable) {
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: "
+                                        + currentUserEmail));
+        Page<Order> orders;
+        if (currentUser.getRole().equals("ADMIN")) {
+
+            orders = orderRepository.findAll(pageable);
+
+        } else {
+            orders = orderRepository.findByUserId(
+                    currentUser.getId(),
+                    pageable );
+        }
         return orders.map(OrderMapper::toDTO);
     }
     // Get Order By ID
@@ -131,12 +221,28 @@ public class OrderService {
                 .map(OrderMapper::toDTO);
     }
     // Delete Order
-    public void deleteOrder(Integer id) {
-      Order order = orderRepository.findById(id)
-              .orElseThrow(()->
-                 new OrderNotFoundException(
-                       "Order not found with id: " + id));
-      orderRepository.delete(order);
+    public void deleteOrder(
+            Integer id,
+            String currentUserEmail) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with id: " + id));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Current user not found with email: "
+                                        + currentUserEmail));
+
+        if (!order.getUserId().equals(currentUser.getId())
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
+
+        orderRepository.delete(order);
     }
     // update Order
     @Transactional
@@ -167,7 +273,6 @@ public class OrderService {
         double totalPrice =
                 product.getPrice() * orderDTO.getQuantity();
 
-        existingOrder.setUserId(orderDTO.getUserId());
         existingOrder.setProductId(orderDTO.getProductId());
         existingOrder.setQuantity(orderDTO.getQuantity());
         existingOrder.setTotalPrice(totalPrice);
