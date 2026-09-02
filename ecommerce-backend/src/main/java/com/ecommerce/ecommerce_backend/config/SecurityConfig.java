@@ -18,17 +18,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    // =========================
     // BCrypt Password Encoder
-    // =========================
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // =========================
     // Load User From MySQL
-    // =========================
     @Bean
     public UserDetailsService userDetailsService(
             UserRepository userRepository) {
@@ -41,9 +37,8 @@ public class SecurityConfig {
                                         + username));
     }
 
-    // =========================
     // Security Configuration
-    // =========================
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -66,7 +61,6 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // =========================
                         // PUBLIC
                         // =========================
 
@@ -82,10 +76,8 @@ public class SecurityConfig {
                                 "/users"
                         ).permitAll()
 
-
-                        // =========================
                         // USER MANAGEMENT
-                        // =========================
+
 
                         // Admin only
                         .requestMatchers(
@@ -106,12 +98,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/users/admin"
                         ).hasRole("ADMIN")
-
-
                         // =========================
                         // PRODUCTS
-                        // =========================
-
                         // USER + ADMIN can view products
                         .requestMatchers(
                                 HttpMethod.GET,
