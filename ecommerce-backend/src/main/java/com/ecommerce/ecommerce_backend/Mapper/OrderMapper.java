@@ -3,6 +3,7 @@ package com.ecommerce.ecommerce_backend.Mapper;
 import com.ecommerce.ecommerce_backend.DTO.OrderDTO;
 import com.ecommerce.ecommerce_backend.DTO.OrderRequestDTO;
 import com.ecommerce.ecommerce_backend.Entity.Order;
+import com.ecommerce.ecommerce_backend.Entity.OrderStatus;
 
 public class OrderMapper {
 
@@ -16,6 +17,7 @@ public class OrderMapper {
         dto.setQuantity(order.getQuantity());
         dto.setTotalPrice(order.getTotalPrice());
         dto.setOrderDate(order.getOrderDate());
+        dto.setStatus(order.getStatus());
 
         return dto;
     }
@@ -27,7 +29,7 @@ public class OrderMapper {
         order.setUserId(dto.getUserId());
         order.setProductId(dto.getProductId());
         order.setQuantity(dto.getQuantity());
-
+        order.setStatus(OrderStatus.PENDING);
         return order;
     }
 }

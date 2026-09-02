@@ -1,6 +1,6 @@
 package com.ecommerce.ecommerce_backend.DTO;
 
-import jakarta.validation.constraints.NotNull;
+ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
@@ -19,4 +19,6 @@ public class OrderRequestDTO {
     @NotNull
     @Positive
     private Integer quantity;
+
+
 }

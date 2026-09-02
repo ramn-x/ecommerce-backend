@@ -95,6 +95,14 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage());
     }
+    @ExceptionHandler(InvalidOrderStatusException.class)
+    public ResponseEntity<String> handleInvalidOrderStatus(
+            InvalidOrderStatusException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
 
 
 }

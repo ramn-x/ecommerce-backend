@@ -2,10 +2,8 @@ package com.ecommerce.ecommerce_backend.Service;
 
 import com.ecommerce.ecommerce_backend.DTO.OrderDTO;
 import com.ecommerce.ecommerce_backend.DTO.OrderRequestDTO;
-import com.ecommerce.ecommerce_backend.Entity.Cart;
-import com.ecommerce.ecommerce_backend.Entity.Order;
-import com.ecommerce.ecommerce_backend.Entity.Product;
-import com.ecommerce.ecommerce_backend.Entity.User;
+import com.ecommerce.ecommerce_backend.DTO.OrderStatusRequestDTO;
+import com.ecommerce.ecommerce_backend.Entity.*;
 import com.ecommerce.ecommerce_backend.Exception.*;
 import com.ecommerce.ecommerce_backend.Mapper.OrderMapper;
 import com.ecommerce.ecommerce_backend.Repository.CartRepository;
@@ -88,6 +86,7 @@ public class OrderService {
 
         order.setOrderDate(LocalDateTime.now());
         order.setTotalPrice(totalPrice);
+        order.setStatus(OrderStatus.PENDING);
 
         Order savedOrder = orderRepository.save(order);
 
@@ -278,6 +277,35 @@ public class OrderService {
         existingOrder.setTotalPrice(totalPrice);
 
         Order updatedOrder = orderRepository.save(existingOrder);
+
+        return OrderMapper.toDTO(updatedOrder);
+    }
+    public OrderDTO updateOrderStatus(Integer id, OrderStatusRequestDTO statusDTO) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with id: " + id));
+//        order.setStatus(statusDTO.getStatus());
+        OrderStatus currentStatus  = order.getStatus();
+        OrderStatus newStatus =statusDTO.getStatus();
+
+        if (currentStatus ==OrderStatus.PENDING
+                    && (newStatus ==OrderStatus.CONFIRMED
+                    || newStatus == OrderStatus.CANCELLED)){
+            order.setStatus(newStatus);
+        }else if (currentStatus == OrderStatus.CONFIRMED
+                   && newStatus == OrderStatus.SHIPPED ){
+            order.setStatus(newStatus);
+        } else if (currentStatus == OrderStatus.SHIPPED
+                    && newStatus == OrderStatus.DELIVERED) {
+            order.setStatus(newStatus);
+        } else  {
+             throw new InvalidOrderStatusException(
+                     "Invalid status transition from "
+                     + currentStatus + " to " +newStatus );
+        }
+        Order updatedOrder = orderRepository.save(order);
 
         return OrderMapper.toDTO(updatedOrder);
     }

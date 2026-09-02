@@ -1,5 +1,6 @@
 package com.ecommerce.ecommerce_backend.DTO;
 
+import com.ecommerce.ecommerce_backend.Entity.OrderStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -12,5 +13,6 @@ public class OrderDTO {
     private Integer quantity;
     private double totalPrice;
     private LocalDateTime orderDate;
+    private OrderStatus status;
 
 }

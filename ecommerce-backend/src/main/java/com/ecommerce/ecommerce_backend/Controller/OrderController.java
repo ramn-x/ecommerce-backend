@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_backend.Controller;
 
 import com.ecommerce.ecommerce_backend.DTO.OrderDTO;
 import com.ecommerce.ecommerce_backend.DTO.OrderRequestDTO;
+import com.ecommerce.ecommerce_backend.DTO.OrderStatusRequestDTO;
 import com.ecommerce.ecommerce_backend.Entity.Product;
 import com.ecommerce.ecommerce_backend.Entity.User;
 import com.ecommerce.ecommerce_backend.Exception.AccessDeniedException;
@@ -138,5 +139,13 @@ public class OrderController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(orders);
+    }
+
+    @PutMapping("{id}/status")
+    private OrderDTO updateOrderStatus (
+            @PathVariable Integer id,
+            @Valid @RequestBody OrderStatusRequestDTO statusDTO ){
+        return orderService.updateOrderStatus(id,statusDTO);
+
     }
 }

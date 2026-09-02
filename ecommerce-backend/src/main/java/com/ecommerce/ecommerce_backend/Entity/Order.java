@@ -35,4 +35,7 @@ public class Order {
     private double totalPrice;
 
     private LocalDateTime orderDate;
+
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 }
