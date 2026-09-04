@@ -33,14 +33,13 @@ public class GlobalExceptionHandler {
 
 //    General exception
 //    Now we'll handle unexpected errors that aren't specifically handled by our other exceptions
-     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String,String>> handleGeneralException(Exception ex){
+@ExceptionHandler(Exception.class)
+public ResponseEntity<?> handleGeneralException(Exception ex) {
 
-        Map<String,String> error= new HashMap<>();
-        error.put("meessage","something wrong");
-        error.put("Status","500");
-        return new ResponseEntity<>(error,HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body("Something went wrong");
+}
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String,String>>handleUserNotFoundException(UserNotFoundException ex){
@@ -103,6 +102,16 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage());
     }
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleIllegalStateException(
+            IllegalStateException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+
 
 
 }

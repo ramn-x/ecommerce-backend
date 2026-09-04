@@ -147,7 +147,9 @@ public class OrderService {
             // Convert DTO → Entity
             Order order =
                     OrderMapper.toEntity(orderRequestDTO);
-
+            if (cartItems.isEmpty()) {
+                throw new RuntimeException("Cart is empty");
+            }
             order.setOrderDate(LocalDateTime.now());
             order.setTotalPrice(totalPrice);
 
@@ -190,6 +192,18 @@ public class OrderService {
         return orders.map(OrderMapper::toDTO);
     }
     // Get Order By ID
+    public OrderDTO getOrderById(Integer id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with id: " + id));
+
+        return OrderMapper.toDTO(order);
+    }
+
+    // Get Order By ID
+
     public Page<OrderDTO> getOrdersByUserId(
             Integer userId,
             String currentUserEmail,
@@ -286,13 +300,23 @@ public class OrderService {
                 .orElseThrow(() ->
                         new OrderNotFoundException(
                                 "Order not found with id: " + id));
-//        order.setStatus(statusDTO.getStatus());
+        // order.setStatus(statusDTO.getStatus());
         OrderStatus currentStatus  = order.getStatus();
         OrderStatus newStatus =statusDTO.getStatus();
 
         if (currentStatus ==OrderStatus.PENDING
                     && (newStatus ==OrderStatus.CONFIRMED
                     || newStatus == OrderStatus.CANCELLED)){
+            if (newStatus == OrderStatus.CANCELLED){
+                Product product =productRepository.findById(order.getProductId())
+                        .orElseThrow(()->
+                                new ProductNotFoundException(
+                                        "Product not found with id: "
+                                        + order.getProductId()));
+                product.setQuantity(product.getQuantity() +
+                             order.getQuantity());
+                productRepository.save(product);
+            }
             order.setStatus(newStatus);
         }else if (currentStatus == OrderStatus.CONFIRMED
                    && newStatus == OrderStatus.SHIPPED ){

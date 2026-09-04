@@ -3,14 +3,7 @@ package com.ecommerce.ecommerce_backend.Controller;
 import com.ecommerce.ecommerce_backend.DTO.OrderDTO;
 import com.ecommerce.ecommerce_backend.DTO.OrderRequestDTO;
 import com.ecommerce.ecommerce_backend.DTO.OrderStatusRequestDTO;
-import com.ecommerce.ecommerce_backend.Entity.Product;
-import com.ecommerce.ecommerce_backend.Entity.User;
-import com.ecommerce.ecommerce_backend.Exception.AccessDeniedException;
-import com.ecommerce.ecommerce_backend.Exception.InsufficientStockException;
-import com.ecommerce.ecommerce_backend.Exception.ProductNotFoundException;
-import com.ecommerce.ecommerce_backend.Exception.UserNotFoundException;
 import com.ecommerce.ecommerce_backend.Service.OrderService;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -142,10 +135,15 @@ public class OrderController {
     }
 
     @PutMapping("{id}/status")
-    private OrderDTO updateOrderStatus (
+    public OrderDTO updateOrderStatus (
             @PathVariable Integer id,
             @Valid @RequestBody OrderStatusRequestDTO statusDTO ){
         return orderService.updateOrderStatus(id,statusDTO);
 
+    }
+    @GetMapping("/{id}")
+    public OrderDTO getOrderById(@PathVariable Integer id) {
+
+        return orderService.getOrderById(id);
     }
 }
