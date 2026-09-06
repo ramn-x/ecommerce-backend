@@ -21,9 +21,6 @@ class EcommerceBackendApplicationTests {
 	private MockMvc mockMvc;
 
 	@Test
-	void contextLoads() {
-	}
-	@Test
 	void loginTest() throws Exception {
 
 		String loginJson = """
@@ -72,25 +69,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void getProductTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		mockMvc.perform(get("/products/2")
 						.header("Authorization", "Bearer " + token))
@@ -99,25 +78,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void userCannotAccessAdminOrderEndpointTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		mockMvc.perform(get("/orders/product/2")
 						.header("Authorization", "Bearer " + token))
@@ -126,25 +87,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void adminCanAccessOrderByProductTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "test@gmail.com",
-                "password": "test123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getAdminToken();
 
 		mockMvc.perform(get("/orders/product/2")
 						.header("Authorization", "Bearer " + token))
@@ -153,25 +96,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void productNotFoundTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		mockMvc.perform(get("/products/9999")
 						.header("Authorization", "Bearer " + token))
@@ -180,25 +105,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void orderNotFoundTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		mockMvc.perform(get("/orders/9999")
 						.header("Authorization", "Bearer " + token))
@@ -207,28 +114,10 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void addToCartTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		mockMvc.perform(post("/cart")
-						.param("productid", "2")
+						.param("productid", "3")
 						.param("quantity", "1")
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isCreated());
@@ -263,28 +152,10 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void updateCartTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult result = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String response = result.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(response)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		MvcResult cartResult = mockMvc.perform(post("/cart")
-						.param("productid", "2")
+						.param("productid", "3")
 						.param("quantity", "1")
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isCreated())
@@ -306,29 +177,10 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void deleteCartTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse =
-				loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		MvcResult cartResult = mockMvc.perform(post("/cart")
-						.param("productid", "2")
+						.param("productid", "3")
 						.param("quantity", "1")
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isCreated())
@@ -349,26 +201,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void checkoutTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse =
-				loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		mockMvc.perform(post("/cart")
 						.param("productid", "3")
@@ -383,26 +216,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void getOrderByIdTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
-
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse =
-				loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
+		String token = getUserToken();
 
 		String orderJson = """
             {
@@ -510,26 +324,7 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void updateOrderStatusTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "test@gmail.com",
-                "password": "test123"
-            }
-            """;
-
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse =
-				loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
+		String token = getAdminToken();
 
 		String orderJson = """
             {
@@ -554,41 +349,20 @@ class EcommerceBackendApplicationTests {
 				.get("id")
 				.asInt();
 
-		String statusJson = """
-            {
-                "status": "CONFIRMED"
-            }
-            """;
-
 		mockMvc.perform(put("/orders/" + orderId + "/status")
 						.contentType("application/json")
-						.content(statusJson)
+						.content("""
+                            {
+                                "status": "CONFIRMED"
+                            }
+                            """)
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk());
 	}
 	@Test
 	void invalidOrderStatusTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "test@gmail.com",
-                "password": "test123"
-            }
-            """;
-
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse =
-				loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
+		String token = getAdminToken();
 
 		String orderJson = """
             {
@@ -613,40 +387,20 @@ class EcommerceBackendApplicationTests {
 				.get("id")
 				.asInt();
 
-		String statusJson = """
-            {
-                "status": "SHIPPED"
-            }
-            """;
-
 		mockMvc.perform(put("/orders/" + orderId + "/status")
 						.contentType("application/json")
-						.content(statusJson)
+						.content("""
+                            {
+                                "status": "SHIPPED"
+                            }
+                            """)
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isBadRequest());
 	}
 	@Test
 	void completeOrderStatusFlowTest() throws Exception {
 
-		String loginJson = """
-            {
-                "email": "test@gmail.com",
-                "password": "test123"
-            }
-            """;
-
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse = loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
+		String token = getAdminToken();
 
 		String orderJson = """
             {
@@ -663,14 +417,14 @@ class EcommerceBackendApplicationTests {
 				.andExpect(status().isCreated())
 				.andReturn();
 
-		String orderResponse = orderResult.getResponse().getContentAsString();
+		String orderResponse =
+				orderResult.getResponse().getContentAsString();
 
 		Integer orderId = new ObjectMapper()
 				.readTree(orderResponse)
 				.get("id")
 				.asInt();
 
-		// PENDING → CONFIRMED
 		mockMvc.perform(put("/orders/" + orderId + "/status")
 						.contentType("application/json")
 						.content("""
@@ -681,7 +435,6 @@ class EcommerceBackendApplicationTests {
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk());
 
-		// CONFIRMED → SHIPPED
 		mockMvc.perform(put("/orders/" + orderId + "/status")
 						.contentType("application/json")
 						.content("""
@@ -692,7 +445,6 @@ class EcommerceBackendApplicationTests {
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk());
 
-		// SHIPPED → DELIVERED
 		mockMvc.perform(put("/orders/" + orderId + "/status")
 						.contentType("application/json")
 						.content("""
@@ -706,35 +458,14 @@ class EcommerceBackendApplicationTests {
 	@Test
 	void paymentFlowTest() throws Exception {
 
-		// Login as user 6
-		String loginJson = """
-            {
-                "email": "user2@gmail.com",
-                "password": "user123"
-            }
-            """;
+		String token = getUserToken();
 
-		MvcResult loginResult = mockMvc.perform(post("/users/login")
-						.contentType("application/json")
-						.content(loginJson))
-				.andExpect(status().isOk())
-				.andReturn();
-
-		String loginResponse = loginResult.getResponse().getContentAsString();
-
-		String token = new ObjectMapper()
-				.readTree(loginResponse)
-				.get("token")
-				.asText();
-
-		// Add product to cart
 		mockMvc.perform(post("/cart")
 						.param("productid", "3")
 						.param("quantity", "1")
 						.header("Authorization", "Bearer " + token))
 				.andExpect(status().isCreated());
 
-		// Checkout
 		MvcResult checkoutResult = mockMvc.perform(
 						post("/orders/checkout")
 								.header("Authorization", "Bearer " + token))
@@ -750,7 +481,6 @@ class EcommerceBackendApplicationTests {
 				.get("id")
 				.asInt();
 
-		// Create payment
 		MvcResult paymentResult = mockMvc.perform(
 						post("/payments/" + orderId)
 								.header("Authorization", "Bearer " + token))
@@ -765,7 +495,6 @@ class EcommerceBackendApplicationTests {
 				.get("id")
 				.asInt();
 
-		// Mark payment as PAID
 		mockMvc.perform(
 						put("/payments/" + paymentId + "/status")
 								.contentType("application/json")
@@ -777,12 +506,55 @@ class EcommerceBackendApplicationTests {
 								.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk());
 
-		// Verify order becomes CONFIRMED
 		mockMvc.perform(
 						get("/orders/" + orderId)
 								.header("Authorization", "Bearer " + token))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.status").value("CONFIRMED"));
+	}
+	private String getUserToken() throws Exception {
+
+		String loginJson = """
+            {
+                "email": "user2@gmail.com",
+                "password": "user123"
+            }
+            """;
+
+		MvcResult result = mockMvc.perform(post("/users/login")
+						.contentType("application/json")
+						.content(loginJson))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String response = result.getResponse().getContentAsString();
+
+		return new ObjectMapper()
+				.readTree(response)
+				.get("token")
+				.asText();
+	}
+	private String getAdminToken() throws Exception {
+
+		String loginJson = """
+            {
+                "email": "test@gmail.com",
+                "password": "test123"
+            }
+            """;
+
+		MvcResult result = mockMvc.perform(post("/users/login")
+						.contentType("application/json")
+						.content(loginJson))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String response = result.getResponse().getContentAsString();
+
+		return new ObjectMapper()
+				.readTree(response)
+				.get("token")
+				.asText();
 	}
 
 }
