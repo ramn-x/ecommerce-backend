@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce_backend.Service;
 
 import com.ecommerce.ecommerce_backend.Exception.AccessDeniedException;
+import com.ecommerce.ecommerce_backend.Exception.CartNotFoundException;
 import com.ecommerce.ecommerce_backend.Exception.UserNotFoundException;
 import com.ecommerce.ecommerce_backend.Repository.CartRepository;
 import com.ecommerce.ecommerce_backend.DTO.CartDTO;
@@ -154,7 +155,7 @@ public class CartService {
 
         Cart cart = cartRepository.findById(cartId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new CartNotFoundException (
                                 "Cart item not found with id: " + cartId));
 
         User currentUser = userRepository.findByEmail(currentUserEmail)

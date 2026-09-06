@@ -3,9 +3,7 @@ package com.ecommerce.ecommerce_backend.Service;
 import com.ecommerce.ecommerce_backend.DTO.PaymentDTO;
 import com.ecommerce.ecommerce_backend.DTO.PaymentStatusRequestDTO;
 import com.ecommerce.ecommerce_backend.Entity.*;
-import com.ecommerce.ecommerce_backend.Exception.AccessDeniedException;
-import com.ecommerce.ecommerce_backend.Exception.OrderNotFoundException;
-import com.ecommerce.ecommerce_backend.Exception.UserNotFoundException;
+import com.ecommerce.ecommerce_backend.Exception.*;
 import com.ecommerce.ecommerce_backend.Mapper.PaymentMapper;
 import com.ecommerce.ecommerce_backend.Repository.OrderRepository;
 import com.ecommerce.ecommerce_backend.Repository.PaymentRepository;
@@ -13,6 +11,7 @@ import com.ecommerce.ecommerce_backend.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class PaymentService {
@@ -22,7 +21,7 @@ public class PaymentService {
     private final UserRepository userRepository;
 
     public PaymentService(PaymentRepository paymentRepository,
-                          OrderRepository orderRepository,
+                           OrderRepository orderRepository,
                           UserRepository userRepository) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
@@ -71,33 +70,111 @@ public class PaymentService {
             PaymentStatusRequestDTO statusDTO,
             String currentUserEmail) {
 
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() ->
+                        new PaymentNotFoundException (
+                                "Payment not found with id: " + id));
 
-            Payment payment = paymentRepository.findById(id)
-                    .orElseThrow(() ->
-                            new RuntimeException(
-                                    "Payment not found with id: " + id));
+        // Find order
+        Order order = orderRepository.findById(payment.getOrderId())
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with id: "
+                                        + payment.getOrderId()));
 
-            PaymentStatus newStatus = statusDTO.getStatus();
+        // Find logged-in user
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: "
+                                        + currentUserEmail));
 
-            if (payment.getStatus() != PaymentStatus.PENDING) {
-                throw new IllegalStateException(
-                        "Payment status cannot be changed from "
-                                + payment.getStatus());
-            }
+        // Ownership check
+        if (!order.getUserId().equals(currentUser.getId())
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
+
+        PaymentStatus newStatus = statusDTO.getStatus();
+        PaymentStatus currentStatus = payment.getStatus();
+
+        // Payment status validation
+        if (currentStatus == PaymentStatus.PENDING
+                && (newStatus == PaymentStatus.PAID
+                || newStatus == PaymentStatus.FAILED)) {
 
             payment.setStatus(newStatus);
 
-            Payment updatedPayment = paymentRepository.save(payment);
-            if (newStatus == PaymentStatus.PAID) {
-                Order order = orderRepository
-                        .findById(payment.getOrderId())
-                        .orElseThrow(() ->
-                                new OrderNotFoundException(
-                                        "order not found with id" +
-                                                payment.getOrderId()));
-                order.setStatus(OrderStatus.CONFIRMED);
-                orderRepository.save(order);
-            }
-            return PaymentMapper.toDTO(updatedPayment);
+        } else if (currentStatus == PaymentStatus.PAID
+                && newStatus == PaymentStatus.REFUNDED) {
+
+            payment.setStatus(newStatus);
+
+        } else {
+            throw new IllegalStateException(
+                    "Invalid payment status transition from "
+                            + currentStatus + " to " + newStatus);
         }
+
+        Payment updatedPayment = paymentRepository.save(payment);
+
+        // PAID → Order CONFIRMED
+        if (newStatus == PaymentStatus.PAID) {
+            order.setStatus(OrderStatus.CONFIRMED);
+            orderRepository.save(order);
+        }
+
+        return PaymentMapper.toDTO(updatedPayment);
     }
+
+
+    public PaymentDTO getPaymentById(Integer id) {
+
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() ->
+                 new ProductNotFoundException(
+                 "Payment not found with id: " + id));
+
+        return PaymentMapper.toDTO(payment);
+    }
+    public PaymentDTO getPaymentByOrderId(Integer orderId) {
+
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .stream()
+                .findFirst()
+                .orElseThrow(() ->
+                        new PaymentNotFoundException(
+                                "Payment not found for order: " + orderId));
+
+        return PaymentMapper.toDTO(payment);
+    }
+
+
+    public List<PaymentDTO> getPayments(String currentUserEmail) {
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: " + currentUserEmail));
+
+        List<Payment> payments = paymentRepository.findAll();
+
+        if (currentUser.getRole().equals("ADMIN")) {
+            return payments.stream()
+                    .map(PaymentMapper::toDTO)
+                    .toList();
+        }
+
+        return payments.stream()
+                .filter(payment -> {
+                    Order order = orderRepository.findById(payment.getOrderId())
+                            .orElse(null);
+
+                    return order != null
+                            && order.getUserId().equals(currentUser.getId());
+                })
+                .map(PaymentMapper::toDTO)
+                .toList();
+    }
+}

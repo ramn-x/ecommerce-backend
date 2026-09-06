@@ -8,7 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/payments")
@@ -53,5 +56,24 @@ public class PaymentController {
                 id,
                 statusDTO,
                 currentUserEmail);
+    }
+    @GetMapping("/{id}")
+    public PaymentDTO getPaymentById(@PathVariable Integer id){
+        return paymentService.getPaymentById(id);
+    }
+    @GetMapping("/order/{orderId}")
+    public PaymentDTO getPaymentByOrderId(@PathVariable
+                      Integer orderId ){
+        return paymentService.getPaymentByOrderId(orderId);
+    }
+
+    @GetMapping
+    public List<PaymentDTO> getPayments(){
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
+
+        String currentUserEmail =authentication.getName();
+        return paymentService.getPayments(currentUserEmail);
     }
 }

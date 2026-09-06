@@ -7,6 +7,7 @@ import com.ecommerce.ecommerce_backend.DTO.UserRequestDTO;
 import com.ecommerce.ecommerce_backend.Entity.User;
 import com.ecommerce.ecommerce_backend.Exception.AccessDeniedException;
 import com.ecommerce.ecommerce_backend.Exception.EmailAlreadyExistsException;
+import com.ecommerce.ecommerce_backend.Exception.InvalidCredentialsException;
 import com.ecommerce.ecommerce_backend.Exception.UserNotFoundException;
 import com.ecommerce.ecommerce_backend.Mapper.UserMapper;
 import com.ecommerce.ecommerce_backend.Repository.UserRepository;
@@ -169,7 +170,7 @@ public class UserService {
         if (!passwordEncoder.matches(
                 request.getPassword(),
                 user.getPassword())) {
-            throw new RuntimeException("Invalid password");
+            throw new InvalidCredentialsException("Invalid password");
         }
         String token = jwtService.generateToken(user.getEmail());
         return new LoginResponseDTO(token);
