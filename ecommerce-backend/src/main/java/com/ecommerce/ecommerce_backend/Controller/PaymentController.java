@@ -2,13 +2,16 @@ package com.ecommerce.ecommerce_backend.Controller;
 
 import com.ecommerce.ecommerce_backend.DTO.PaymentDTO;
 import com.ecommerce.ecommerce_backend.DTO.PaymentStatusRequestDTO;
+import com.ecommerce.ecommerce_backend.Entity.Payment;
+import com.ecommerce.ecommerce_backend.Exception.PaymentNotFoundException;
+import com.ecommerce.ecommerce_backend.Mapper.PaymentMapper;
+import com.ecommerce.ecommerce_backend.Repository.PaymentRepository;
 import com.ecommerce.ecommerce_backend.Service.PaymentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +21,12 @@ import java.util.List;
 public class PaymentController {
 
     public final PaymentService paymentService;
+    public final PaymentRepository paymentRepository;
 
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService,
+                             PaymentRepository paymentRepository) {
         this.paymentService = paymentService;
+        this.paymentRepository = paymentRepository;
     }
     @PostMapping("/{orderId}")
     public ResponseEntity<PaymentDTO> createPayment(
@@ -58,13 +64,24 @@ public class PaymentController {
                 currentUserEmail);
     }
     @GetMapping("/{id}")
-    public PaymentDTO getPaymentById(@PathVariable Integer id){
-        return paymentService.getPaymentById(id);
+    public PaymentDTO getPaymentById(@PathVariable Integer id) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String currentUserEmail = authentication.getName();
+
+        return paymentService.getPaymentById(id, currentUserEmail);
     }
     @GetMapping("/order/{orderId}")
-    public PaymentDTO getPaymentByOrderId(@PathVariable
-                      Integer orderId ){
-        return paymentService.getPaymentByOrderId(orderId);
+    public PaymentDTO getPaymentByOrderId(@PathVariable Integer orderId) {
+
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+
+        String currentUserEmail = authentication.getName();
+
+        return paymentService.getPaymentByOrderId(orderId, currentUserEmail);
     }
 
     @GetMapping

@@ -129,16 +129,41 @@ public class PaymentService {
     }
 
 
-    public PaymentDTO getPaymentById(Integer id) {
+    public PaymentDTO getPaymentById(
+            Integer id,
+            String currentUserEmail) {
 
         Payment payment = paymentRepository.findById(id)
                 .orElseThrow(() ->
-                 new ProductNotFoundException(
-                 "Payment not found with id: " + id));
+                        new PaymentNotFoundException(
+                                "Payment not found with id: " + id));
+
+        // Find order
+        Order order = orderRepository.findById(payment.getOrderId())
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with id: "
+                                        + payment.getOrderId()));
+
+        // Find logged-in user
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: "
+                                        + currentUserEmail));
+
+        // Ownership check
+        if (!order.getUserId().equals(currentUser.getId())
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
 
         return PaymentMapper.toDTO(payment);
     }
-    public PaymentDTO getPaymentByOrderId(Integer orderId) {
+    public PaymentDTO getPaymentByOrderId(
+            Integer orderId,
+            String currentUserEmail) {
 
         Payment payment = paymentRepository.findByOrderId(orderId)
                 .stream()
@@ -146,6 +171,23 @@ public class PaymentService {
                 .orElseThrow(() ->
                         new PaymentNotFoundException(
                                 "Payment not found for order: " + orderId));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() ->
+                        new OrderNotFoundException(
+                                "Order not found with id: " + orderId));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: "
+                                        + currentUserEmail));
+
+        if (!order.getUserId().equals(currentUser.getId())
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
 
         return PaymentMapper.toDTO(payment);
     }
