@@ -144,6 +144,15 @@ public class OrderController {
     @GetMapping("/{id}")
     public OrderDTO getOrderById(@PathVariable Integer id) {
 
-        return orderService.getOrderById(id);
+        Authentication authentication =
+                SecurityContextHolder.getContext()
+                        .getAuthentication();
+
+        String currentUserEmail = authentication.getName();
+
+        return orderService.getOrderById(
+                id,
+                currentUserEmail
+        );
     }
 }

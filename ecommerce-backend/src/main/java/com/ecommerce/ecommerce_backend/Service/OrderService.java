@@ -192,12 +192,26 @@ public class OrderService {
         return orders.map(OrderMapper::toDTO);
     }
     // Get Order By ID
-    public OrderDTO getOrderById(Integer id) {
+    public OrderDTO getOrderById(
+            Integer id,
+            String currentUserEmail) {
 
         Order order = orderRepository.findById(id)
                 .orElseThrow(() ->
                         new OrderNotFoundException(
                                 "Order not found with id: " + id));
+
+        User currentUser = userRepository.findByEmail(currentUserEmail)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found with email: "
+                                        + currentUserEmail));
+
+        if (!order.getUserId().equals(currentUser.getId())
+                && !currentUser.getRole().equals("ADMIN")) {
+
+            throw new AccessDeniedException("Access denied");
+        }
 
         return OrderMapper.toDTO(order);
     }
