@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce_backend.Service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -11,15 +12,14 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final String SECRET_KEY =
-            "my-super-secret-key-for-ecommerce-project-123456";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     public String generateToken(String email) {
 
         SecretKey key = Keys.hmacShaKeyFor(
-                SECRET_KEY.getBytes(StandardCharsets.UTF_8)
+                secretKey.getBytes(StandardCharsets.UTF_8)
         );
-
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
@@ -33,7 +33,7 @@ public class JwtService {
     public String extractEmail(String token) {
 
         SecretKey key = Keys.hmacShaKeyFor(
-                SECRET_KEY.getBytes(StandardCharsets.UTF_8)
+                secretKey.getBytes(StandardCharsets.UTF_8)
         );
 
         return Jwts.parser()
