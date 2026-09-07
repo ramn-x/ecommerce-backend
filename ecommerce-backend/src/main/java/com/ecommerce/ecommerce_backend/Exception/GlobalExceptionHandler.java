@@ -11,12 +11,18 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+
     @ExceptionHandler(ProductNotFoundException.class)
-    public ResponseEntity<Map<String,String>>handleProductNotFoundException(ProductNotFoundException ex){
-        Map<String,String>error= new HashMap<>();
-        error.put("message", ex.getMessage());
-        error.put("status","404");
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleProductNotFoundException(
+            ProductNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage()
+                ));
     }
 
 //  validation exceptiom
@@ -34,8 +40,8 @@ public class GlobalExceptionHandler {
 
 //    General exception
 //    Now we'll handle unexpected errors that aren't specifically handled by our other exceptions
-@ExceptionHandler(Exception.class)
-public ResponseEntity<?> handleGeneralException(Exception ex) {
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleGeneralException(Exception ex) {
 
     return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -43,112 +49,141 @@ public ResponseEntity<?> handleGeneralException(Exception ex) {
 }
 
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String,String>>handleUserNotFoundException(UserNotFoundException ex){
-        Map<String,String> error= new HashMap<>();
-        error.put("message", ex.getMessage());
-        error.put("status","404");
-        return new ResponseEntity<>(error,HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
+            UserNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(OrderNotFoundException.class)
-    public ResponseEntity<Map<String,String>>
-            handleOrderNotFoundException(OrderNotFoundException ex){
-        Map<String,String>error= new HashMap<>();
-        error.put("message", ex.getMessage());
-        error.put("status","404");
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    public ResponseEntity<ErrorResponse> handleOrderNotFoundException(
+            OrderNotFoundException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage()
+                ));
     }
     @ExceptionHandler(InsufficientStockException.class)
-    public ResponseEntity<Map<String, String>> handleInsufficientStockException(
+    public ResponseEntity<ErrorResponse> handleInsufficientStockException(
             InsufficientStockException ex) {
 
-        Map<String, String> error = new HashMap<>();
-        error.put("message", ex.getMessage());
-        error.put("status", "400");
-
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<Map<String ,String>>
-         handleEmailAlreadyExistsException
-            (EmailAlreadyExistsException ex){
-        Map<String,String> error =new HashMap<>();
-        error.put("message",ex.getMessage());
-        error.put("status","something wrong");
-        return new ResponseEntity<>(error,HttpStatus.CONFLICT);
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExistsException(
+            EmailAlreadyExistsException ex) {
 
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(
+                        HttpStatus.CONFLICT.value(),
+                        ex.getMessage()
+                ));
     }
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<?> handleAccessDeniedException(
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
             AccessDeniedException ex) {
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body("Access denied");
+                .body(new ErrorResponse(
+                        HttpStatus.FORBIDDEN.value(),
+                        ex.getMessage()
+                ));
     }
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgumentException(
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             IllegalArgumentException ex) {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+                .body(new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage()
+                ));
     }
     @ExceptionHandler(InvalidOrderStatusException.class)
-    public ResponseEntity<String> handleInvalidOrderStatus(
+    public ResponseEntity<ErrorResponse> handleInvalidOrderStatus(
             InvalidOrderStatusException ex) {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+                .body(new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage()
+                ));
     }
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<String> handleIllegalStateException(
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
             IllegalStateException ex) {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ex.getMessage());
+                .body(new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(PaymentNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handlePaymentNotFoundException(
+    public ResponseEntity<ErrorResponse> handlePaymentNotFoundException(
             PaymentNotFoundException ex) {
 
-        Map<String, String> error = new HashMap<>();
-        error.put("message", ex.getMessage());
-        error.put("status", "404");
-
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<String> handleInvalidCredentialsException(
+    public ResponseEntity<ErrorResponse> handleInvalidCredentialsException(
             InvalidCredentialsException ex) {
 
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ex.getMessage());
+                .body(new ErrorResponse(
+                        HttpStatus.UNAUTHORIZED.value(),
+                        ex.getMessage()
+                ));
     }
 
     @ExceptionHandler(CartNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleCartNotFoundException(
+    public ResponseEntity<ErrorResponse> handleCartNotFoundException(
             CartNotFoundException ex) {
 
-        Map<String, String> error = new HashMap<>();
-        error.put("message", ex.getMessage());
-        error.put("status", "404");
-
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(
+                        HttpStatus.NOT_FOUND.value(),
+                        ex.getMessage()
+                ));
     }
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<String> handleHttpMessageNotReadable(
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
             HttpMessageNotReadableException ex) {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body("Invalid request body");
+                .body(new ErrorResponse(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Invalid request body"
+                ));
     }
 
 }
