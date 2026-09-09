@@ -298,8 +298,8 @@ For development, configure the datasource in application.properties according to
 Example:
 
 spring.datasource.url=jdbc:mysql://localhost:3306/ecommerce_db
-spring.datasource.username=root
-spring.datasource.password=YOUR_MYSQL_PASSWORD
+spring.datasource.username=
+spring.datasource.password=
 
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=false
